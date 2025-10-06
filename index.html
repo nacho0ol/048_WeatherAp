@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Informasi Cuaca Kecamatan</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        background-color: #f4f4f9;
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #007bff;
+      }
+      .input-group {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+      #location-input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        flex-grow: 1;
+        margin-right: 10px;
+      }
+      #get-button {
+        padding: 10px 20px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      #get-button:hover {
+        background-color: #218838;
+      }
+      .weather-data {
+        border-top: 2px solid #eee;
+        padding-top: 20px;
+      }
+      .weather-data p {
+        margin: 8px 0;
+        font-size: 1.1em;
+      }
+      .weather-data strong {
+        color: #555;
+      }
+      #error-message {
+        color: #dc3545;
+        text-align: center;
+        margin-top: 15px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Informasi Cuaca Kecamatan</h1>
+      <div class="input-group">
+        <input
+          type="text"
+          id="location-input"
+          placeholder="Masukkan kecamatan (contoh: Tanah Abang)"
+        />
+        <button id="get-button">GET</button>
+      </div>
+
+      <div id="weather-display" class="weather-data" style="display: none">
+        <p><strong>Lokasi:</strong> <span id="lokasi"></span></p>
+        <p><strong>Negara:</strong> <span id="negara"></span></p>
+        <p><strong>Provinsi:</strong> <span id="provinsi"></span></p>
+        <p><strong>Kecamatan:</strong> <span id="kecamatan"></span></p>
+        <p><strong>Suhu:</strong> <span id="suhu"></span> °C</p>
+        <p><strong>Longitude:</strong> <span id="longitude"></span></p>
+        <p><strong>Latitude:</strong> <span id="latitude"></span></p>
+      </div>
+
+      <p id="error-message"></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        const apiKey = "b0ff29a64060444ba3640522250610";
+
+        // Daftar kecamatan yang diizinkan untuk setiap kota
+        const allowedDistricts = {
+          yogyakarta: ["gondokusuman", "umbulharjo", "kotagede"],
+          surabaya: ["tambaksari", "genteng", "pabean cantikan"],
+          jakarta: ["tanah abang", "menteng", "kebon jeruk"],
+        };
+
+        $("#get-button").on("click", function () {
+          const inputDistrict = $("#location-input").val().trim().toLowerCase();
+
+          $("#weather-display").hide();
+          $("#error-message").text("");
+
+          // Menentukan kota berdasarkan kecamatan yang dimasukkan
+          let foundCity = "";
+          for (const city in allowedDistricts) {
+            if (allowedDistricts[city].includes(inputDistrict)) {
+              foundCity = city;
+              break;
+            }
+          }
+
+          if (foundCity) {
+            const urlApi = `https://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${inputDistrict},${foundCity}&aqi=no`;
+
+            $.ajax({
+              url: urlApi,
+              method: "GET",
+              success: function (data) {
+                console.log(data);
+                $("#lokasi").text(data.location.name);
+                $("#negara").text(data.location.country);
+                $("#provinsi").text(data.location.region);
+                $("#kecamatan").text(
+                  inputDistrict.replace(/\b\w/g, (l) => l.toUpperCase())
+                );
+                $("#suhu").text(data.current.temp_c);
+                $("#longitude").text(data.location.lon);
+                $("#latitude").text(data.location.lat);
+
+                $("#weather-display").show();
+              },
+              error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Error fetching data:", textStatus, errorThrown);
+                $("#error-message").text(
+                  "Gagal mendapatkan data cuaca. Silakan coba lagi nanti."
+                );
+              },
+            });
+          } else {
+            $("#error-message").text(
+              "Kecamatan tidak ditemukan atau tidak diizinkan. Silakan masukkan salah satu dari: Gondokusuman, Umbulharjo, Kotagede (Yogyakarta); Tambaksari, Genteng, Pabean Cantikan (Surabaya); atau Tanah Abang, Menteng, Kebon Jeruk (Jakarta)."
+            );
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
